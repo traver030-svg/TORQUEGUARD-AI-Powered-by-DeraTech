@@ -1,1 +1,42 @@
+from fastapi import FastAPI
+import joblib
+import numpy as np
+import os
 
+app = FastAPI()
+
+# Load model
+model_path = os.path.join("model", "model.pkl")
+model = joblib.load(model_path)
+
+@app.get("/")
+def home():
+    return {"message": "TorqueGuard AI is running 🚀"}
+
+@app.post("/predict")
+def predict(
+    air_temperature: float,
+    process_temperature: float,
+    rotational_speed: float,
+    torque: float,
+    tool_wear: float
+):
+    input_data = np.array([[ 
+        air_temperature,
+        process_temperature,
+        rotational_speed,
+        torque,
+        tool_wear
+    ]])
+
+    prediction = model.predict(input_data)[0]
+
+    if prediction == 1:
+        result = "Machine Failure Likely ⚠️"
+    else:
+        result = "Machine Operating Normally ✅"
+
+    return {
+        "prediction": int(prediction),
+        "result": result
+    }
